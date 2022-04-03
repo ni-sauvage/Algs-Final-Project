@@ -2,20 +2,20 @@ package edu.princeton.cs.algs4;
 
 import java.io.File;
 import java.sql.Time;
-import java.util.Comparator;
-import java.util.PriorityQueue;
-import java.util.Scanner;
+import java.util.*;
 
 public class FinalProject {
     private searchStops stops;
     private searchTimes times;
-
+    private EdgeWeightedDigraph graph;
     FinalProject(){
         this.stops = new searchStops();
+        this.graph = new EdgeWeightedDigraph();
     }
     void returnSearchStops(String prefix){
         this.stops.printStopsStartingWith(prefix);
     }
+
     void searchForTimes(String time){
         this.times = new searchTimes(time);
         System.out.println("The following list was returned based on arrival time: ");
@@ -23,6 +23,98 @@ public class FinalProject {
     }
 }
 
+class EdgeWeightedDigraph{
+    private LinkedList<edge>[] adjList;
+    private LinkedList<stop> stopList = new LinkedList<>();
+    private LinkedList<edge> edgeList = new LinkedList<>();
+    private HashMap<Integer, stop> stop_id_hash = new HashMap<Integer, stop>();
+    private class stop{
+        int map_id;
+        int stop_id;
+        String stop_code;
+        String stop_name;
+        String stop_desc;
+        String stop_lat;
+        String stop_lon;
+        String zone_id;
+        String stop_url;
+        String location_type;
+        String parent_station;
+        stop(int stop_id, String stop_code, String stop_name, String stop_desc, String stop_lat, String stop_lon, String zone_id, String stop_url, String location_type, String parent_station, int map_id){
+            this.stop_id = stop_id; this.stop_code = stop_code; this.location_type = location_type; this.map_id = map_id;
+            this.stop_lat = stop_lat; this.stop_lon = stop_lon;
+            this.stop_name = stop_name; this.stop_desc = stop_desc; this.stop_url = stop_url; this.parent_station = parent_station; this.zone_id = zone_id;
+        }
+    }
+    private class edge{
+        double weight;
+        stop stopFrom;
+        stop stopTo;
+        edge(double weight, stop stopFrom, stop stopTo){
+            this.weight = weight; this.stopFrom = stopFrom; this.stopTo = stopTo;
+        }
+    }
+    public EdgeWeightedDigraph(){
+        try {
+            File inp = new File("inp/stops.txt");
+            Scanner readIn = new Scanner(inp);
+            int i = 0;
+            readIn.nextLine();
+            while (readIn.hasNextLine()){
+                String line = readIn.nextLine();
+                String[] parameters = line.split(",");
+                for(String s : parameters) s.trim();
+                stop currentStop = new stop(
+                        Integer.valueOf(parameters[0]), parameters[1], parameters[2], parameters[3],
+                        parameters[4], parameters[5], parameters[6], parameters[7],
+                        parameters[8], parameters.length != 10 ? null : parameters[9], i);
+                stopList.add(currentStop);
+                stop_id_hash.put(Integer.valueOf(parameters[0]), currentStop);
+                i++;
+            }
+            adjList = new LinkedList[i];
+            for(int j = 0; j < adjList.length; j++) adjList[j] = new LinkedList<>();
+            inp = new File("inp/transfers.txt");
+            readIn = new Scanner(inp);
+            readIn.nextLine();
+            while (readIn.hasNextLine()){
+                String line = readIn.nextLine();
+                String[] parameters = line.split(",");
+                for(String s : parameters){
+                    s.trim();
+                }
+                edge currentEdge;
+                if(parameters[2].equals("0")){
+                    currentEdge = new edge(2, getStop(Integer.valueOf(parameters[0])), getStop(Integer.valueOf(parameters[1])));
+                }
+                else {
+                    currentEdge = new edge(Double.valueOf(parameters[3])/100, getStop(Integer.valueOf(parameters[0])), getStop(Integer.valueOf(parameters[1])));
+                }
+                adjList[currentEdge.stopFrom.map_id].add(currentEdge);
+                edgeList.add(currentEdge);
+            }
+            inp = new File("inp/stop_times.txt");
+            readIn = new Scanner(inp);
+            readIn.nextLine();
+            String previousLine = readIn.nextLine();
+            while (readIn.hasNextLine()){
+                String currentLine = readIn.nextLine();
+                String[] prevParameters = previousLine.split(",");
+                for(String s : prevParameters) s.trim();
+                String[] currParameters = currentLine.split(",");
+                for(String s : currParameters) s.trim();
+                if(prevParameters[0].equals(currParameters[0])){
+                    edge currentEdge = new edge(1, getStop(Integer.valueOf(prevParameters[3])), getStop(Integer.valueOf(currParameters[3])));
+                    adjList[currentEdge.stopFrom.map_id].add(currentEdge);
+                    edgeList.add(currentEdge);
+                }
+            }
+        } catch (Exception e) { System.out.println("Error occurred when reading in file " + e); }
+    }
+    stop getStop(int stop_id){
+        return stop_id_hash.get(stop_id);
+    }
+}
 class searchStops {
     TST<String> tst;
 
@@ -45,7 +137,9 @@ class searchStops {
                 }
                 tst.put(stopName, stop);
             }
-        } catch (Exception e) { System.out.println("Error occurred when reading in file" + e); }
+        } catch (Exception e) {
+            System.out.println("Error occurred when reading in file" + e);
+        }
     }
     void printStopsStartingWith(String prefix){
         Iterable<String> prefixStrings = tst.keysWithPrefix(prefix);
