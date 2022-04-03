@@ -21,6 +21,16 @@ public class FinalProject {
         System.out.println("The following list was returned based on arrival time: ");
         this.times.printSearchTimes();
     }
+
+    void printShortestPath(int fromStopID, int toStopId){
+         EdgeWeightedDigraph.path shortestPath = graph.getShortestPath(fromStopID, toStopId);
+         String pathString = "";
+         for(EdgeWeightedDigraph.stop s : shortestPath.pathStops){
+            pathString += s.stop_id + "->";
+         }
+         pathString = pathString.substring(0, pathString.length() - 2);
+         System.out.println("The shortest path by bus stops is:\n" + pathString +"\nwhich has a cost of " + shortestPath.cost);
+    }
 }
 
 class EdgeWeightedDigraph{
@@ -28,7 +38,10 @@ class EdgeWeightedDigraph{
     private LinkedList<stop> stopList = new LinkedList<>();
     private LinkedList<edge> edgeList = new LinkedList<>();
     private HashMap<Integer, stop> stop_id_hash = new HashMap<Integer, stop>();
-    private class stop{
+    double distTo[];
+    stop prevTo[];
+    private int V;
+    public class stop{
         int map_id;
         int stop_id;
         String stop_code;
@@ -73,6 +86,7 @@ class EdgeWeightedDigraph{
                 i++;
             }
             adjList = new LinkedList[i];
+            V = i;
             for(int j = 0; j < adjList.length; j++) adjList[j] = new LinkedList<>();
             inp = new File("inp/transfers.txt");
             readIn = new Scanner(inp);
@@ -108,11 +122,75 @@ class EdgeWeightedDigraph{
                     adjList[currentEdge.stopFrom.map_id].add(currentEdge);
                     edgeList.add(currentEdge);
                 }
+                previousLine = currentLine;
             }
         } catch (Exception e) { System.out.println("Error occurred when reading in file " + e); }
     }
+    public class path{
+        LinkedList<stop> pathStops;
+        double cost;
+        path(LinkedList<stop> pathStops, double cost){
+            this.pathStops = pathStops;
+            this.cost = cost;
+        }
+    }
+    path getShortestPath(int fromStopID, int toStopID){
+        stop fromStop = getStop(fromStopID);
+        stop toStop = getStop(toStopID);
+        distTo = new double[V];
+        prevTo = new stop[V];
+        LinkedList<stop> unsettledNodes = new LinkedList<>();
+        for(stop s : stopList){
+            distTo[s.map_id] = Double.POSITIVE_INFINITY;
+            prevTo[s.map_id] = null;
+            unsettledNodes.add(s);
+        }
+        distTo[fromStop.map_id] = 0;
+        while(!unsettledNodes.isEmpty()){
+            Collections.sort(unsettledNodes, new stopCompare());
+            stop currentStop = unsettledNodes.poll();
+            if(distTo[currentStop.map_id] != Double.POSITIVE_INFINITY) {
+                for (edge e : adjList[currentStop.map_id]) {
+                    double alternativePath = distTo[e.stopFrom.map_id] + e.weight;
+                    if(alternativePath < distTo[e.stopTo.map_id]){
+                        distTo[e.stopTo.map_id] = alternativePath;
+                        prevTo[e.stopTo.map_id] = e.stopFrom;
+                    }
+                }
+            }
+            else {
+                break;
+            }
+        }
+        LinkedList<stop> stopPath = new LinkedList<stop>();
+        stopPath.add(toStop);
+        stop prev = prevTo[toStop.map_id];
+        while(prev != fromStop){
+            stopPath.add(prev);
+            prev = prevTo[prev.map_id];
+        }
+        stopPath.add(fromStop);
+        LinkedList reversedStopPath = new LinkedList();{
+            for(int k = stopPath.size() - 1; k >= 0; k--){
+                reversedStopPath.add(stopPath.get(k));
+            }
+        }
+        return new path(reversedStopPath, distTo[toStop.map_id]);
+    }
+    private class stopCompare implements Comparator<stop> {
+        @Override
+        public int compare(stop o1, stop o2) {
+            if(distTo[o1.map_id] < distTo[o2.map_id])
+                return -1;
+            else if(distTo[o1.map_id] > distTo[o2.map_id])
+                return 1;
+            else return 0;
+        }
+    }
     stop getStop(int stop_id){
-        return stop_id_hash.get(stop_id);
+        try {
+            return stop_id_hash.get(stop_id);
+        } catch (Exception e) { throw new IllegalArgumentException(); }
     }
 }
 class searchStops {
@@ -243,6 +321,37 @@ class searchTimes{
             }
             switch (selection) {
                 case 1: {
+                    boolean validStops = false;
+                    try {
+                        System.out.print("Please enter the ID of the stop you would like to go from: ");
+                        while (!validStops) {
+                            int fromID = 0;
+                            int toID = 0;
+                            boolean fromIDEntered = false;
+                            while (!fromIDEntered) {
+                                if (input.hasNextInt()) {
+                                    fromID = input.nextInt();
+                                    fromIDEntered = true;
+                                } else {
+                                    System.out.print("ERROR: Please enter the ID of the stop you would like to go from: ");
+                                }
+                            }
+                            boolean toIDEntered = false;
+                            System.out.print("Please enter the ID of the stop you would like to go to: ");
+                            while (!toIDEntered) {
+                                if (input.hasNextInt()) {
+                                    toID = input.nextInt();
+                                    toIDEntered = true;
+                                } else {
+                                    System.out.print("ERROR: Please enter the ID of the stop you would like to go to: ");
+                                }
+                            }
+                            project.printShortestPath(fromID, toID);
+                            validStops = true;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("ERROR: not a valid stopID");
+                    }
                     break;
                 }
                 case 2: {
@@ -254,7 +363,7 @@ class searchTimes{
                             searchString = input.next().toUpperCase();
                             searchStringEntered = true;
                         } else {
-                            System.out.print("Please enter a STRING to search stops for: ");
+                            System.out.print("ERROR: Please enter a STRING to search stops for: ");
                         }
                     }
                     project.returnSearchStops(searchString);
