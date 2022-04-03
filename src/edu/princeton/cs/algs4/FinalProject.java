@@ -11,25 +11,25 @@ public class FinalProject {
     FinalProject(){
         this.stops = new searchStops();
         this.graph = new EdgeWeightedDigraph();
+        this.times = new searchTimes();
     }
     void returnSearchStops(String prefix){
         this.stops.printStopsStartingWith(prefix);
     }
 
     void searchForTimes(String time){
-        this.times = new searchTimes(time);
         System.out.println("The following list was returned based on arrival time: ");
-        this.times.printSearchTimes();
+        this.times.printSearchTimes(this.times.getTimes(time));
     }
 
     void printShortestPath(int fromStopID, int toStopId){
-         EdgeWeightedDigraph.path shortestPath = graph.getShortestPath(fromStopID, toStopId);
-         String pathString = "";
-         for(EdgeWeightedDigraph.stop s : shortestPath.pathStops){
+        EdgeWeightedDigraph.path shortestPath = graph.getShortestPath(fromStopID, toStopId);
+        String pathString = "";
+        for(EdgeWeightedDigraph.stop s : shortestPath.pathStops){
             pathString += s.stop_id + "->";
-         }
-         pathString = pathString.substring(0, pathString.length() - 2);
-         System.out.println("The shortest path by bus stops is:\n" + pathString +"\nwhich has a cost of " + shortestPath.cost);
+        }
+        pathString = pathString.substring(0, pathString.length() - 2);
+        System.out.println("The shortest path by bus stops is:\n" + pathString +"\nwhich has a cost of " + shortestPath.cost);
     }
 }
 
@@ -250,12 +250,7 @@ class searchTimes{
             else return 0;
         }
     }
-    searchTimes(String specifiedArrivalTime){
-        try{
-            checkInputtedArrivalTime(specifiedArrivalTime);
-        } catch (IllegalArgumentException specifiedBadTime) {
-            throw new IllegalArgumentException();
-        }
+    searchTimes(){
         try{
             stopQueue = new PriorityQueue<>(new stopComparator());
             File inp = new File("inp/stop_times.txt");
@@ -264,23 +259,39 @@ class searchTimes{
                 String stop = readIn.nextLine();
                 try{
                     String arrivalTimeString = stop.split(",")[1].trim();
-                    if(specifiedArrivalTime.equals(arrivalTimeString)){
-                        int trip_id = Integer.valueOf(stop.split(",")[0]);
-                        String[] arrivalTimeArray = arrivalTimeString.split(":");
-                        String departureTimeString = stop.split(",")[1];
-                        departureTimeString.trim();
-                        String[] departureTimeArray = arrivalTimeString.split(":");
-                        Time arrivalTime = new Time(Integer.valueOf(arrivalTimeArray[0]), Integer.valueOf(arrivalTimeArray[1]), Integer.valueOf(arrivalTimeArray[2]));
-                        Time departureTime = new Time(Integer.valueOf(departureTimeArray[0]), Integer.valueOf(departureTimeArray[1]), Integer.valueOf(departureTimeArray[2]));
-                        stopQueue.add(new stop(trip_id, arrivalTime, departureTime, stop));
-                    }
+                    int trip_id = Integer.valueOf(stop.split(",")[0]);
+                    String[] arrivalTimeArray = arrivalTimeString.split(":");
+                    String departureTimeString = stop.split(",")[1];
+                    departureTimeString.trim();
+                    String[] departureTimeArray = arrivalTimeString.split(":");
+                    Time arrivalTime = new Time(Integer.valueOf(arrivalTimeArray[0]), Integer.valueOf(arrivalTimeArray[1]), Integer.valueOf(arrivalTimeArray[2]));
+                    Time departureTime = new Time(Integer.valueOf(departureTimeArray[0]), Integer.valueOf(departureTimeArray[1]), Integer.valueOf(departureTimeArray[2]));
+                    stopQueue.add(new stop(trip_id, arrivalTime, departureTime, stop));
                 } catch (IllegalArgumentException badTime) {}
             }
         } catch (Exception e) { System.out.println("Error occurred when reading in file" + e); }
     }
-    void printSearchTimes(){
-        while (!stopQueue.isEmpty()){
-            System.out.println(stopQueue.poll().details);
+    LinkedList<stop> getTimes(String specifiedArrivalTime){
+        try{
+            checkInputtedArrivalTime(specifiedArrivalTime);
+        } catch (IllegalArgumentException specifiedBadTime) {
+            throw new IllegalArgumentException();
+        }
+        LinkedList<stop> stopsWithTime = new LinkedList<>();
+        String hourMinsSec[] = specifiedArrivalTime.split(":");
+        Time parsedArrivalTime = new Time(Integer.valueOf(hourMinsSec[0]), Integer.valueOf(hourMinsSec[1]), Integer.valueOf(hourMinsSec[2]));
+        PriorityQueue<stop> stopQueueLocalCopy = new PriorityQueue<>(stopQueue);
+        while (!stopQueueLocalCopy.isEmpty()){
+            stop currentStop = stopQueueLocalCopy.poll();
+            if(currentStop.arrivalTime.equals(parsedArrivalTime)){
+                stopsWithTime.add(currentStop);
+            }
+        }
+        return stopsWithTime;
+    }
+    void printSearchTimes(LinkedList<stop> stopsWithTime){
+        for(int i = 0; i < stopsWithTime.size(); i++){
+            System.out.println(stopsWithTime.get(i).details);
         }
     }
     void checkInputtedArrivalTime(String time){
@@ -393,4 +404,3 @@ class searchTimes{
         }
     }
 }
-
