@@ -1,7 +1,5 @@
 package edu.princeton.cs.algs4;
 
-import java.io.File;
-import java.sql.Time;
 import java.util.*;
 
 public class FinalProject {

@@ -6,7 +6,6 @@ import java.util.*;
 class EdgeWeightedDigraph {
     private LinkedList<edge>[] adjList;
     private LinkedList<stop> stopList = new LinkedList<>();
-    private LinkedList<edge> edgeList = new LinkedList<>();
     private HashMap<Integer, stop> stop_id_hash = new HashMap<Integer, stop>();
     double distTo[];
     stop prevTo[];
@@ -89,7 +88,6 @@ class EdgeWeightedDigraph {
                     currentEdge = new edge(Double.valueOf(parameters[3]) / 100, getStop(Integer.valueOf(parameters[0])), getStop(Integer.valueOf(parameters[1])));
                 }
                 adjList[currentEdge.stopFrom.map_id].add(currentEdge);
-                edgeList.add(currentEdge);
             }
             inp = new File("inp/stop_times.txt");
             readIn = new Scanner(inp);
@@ -104,7 +102,6 @@ class EdgeWeightedDigraph {
                 if (prevParameters[0].equals(currParameters[0])) {
                     edge currentEdge = new edge(1, getStop(Integer.valueOf(prevParameters[3])), getStop(Integer.valueOf(currParameters[3])));
                     adjList[currentEdge.stopFrom.map_id].add(currentEdge);
-                    edgeList.add(currentEdge);
                 }
                 previousLine = currentLine;
             }
