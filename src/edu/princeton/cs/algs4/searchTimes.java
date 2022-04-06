@@ -2,10 +2,7 @@ package edu.princeton.cs.algs4;
 
 import java.io.File;
 import java.sql.Time;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.PriorityQueue;
-import java.util.Scanner;
+import java.util.*;
 
 class searchTimes {
     PriorityQueue<stop> stopQueue;
@@ -58,13 +55,13 @@ class searchTimes {
         }
     }
 
-    LinkedList<stop> getTimes(String specifiedArrivalTime) {
+    ArrayList<stop> getTimes(String specifiedArrivalTime) {
         try {
             checkInputtedArrivalTime(specifiedArrivalTime);
         } catch (IllegalArgumentException specifiedBadTime) {
             throw new IllegalArgumentException();
         }
-        LinkedList<stop> stopsWithTime = new LinkedList<>();
+        ArrayList<stop> stopsWithTime = new ArrayList<>();
         String hourMinsSec[] = specifiedArrivalTime.split(":");
         Time parsedArrivalTime = new Time(Integer.valueOf(hourMinsSec[0]), Integer.valueOf(hourMinsSec[1]), Integer.valueOf(hourMinsSec[2]));
         PriorityQueue<stop> stopQueueLocalCopy = new PriorityQueue<>(stopQueue);
@@ -77,7 +74,7 @@ class searchTimes {
         return stopsWithTime;
     }
 
-    void printSearchTimes(LinkedList<stop> stopsWithTime) {
+    void printSearchTimes(ArrayList<stop> stopsWithTime) {
         for (int i = 0; i < stopsWithTime.size(); i++) {
             System.out.println(stopsWithTime.get(i).details);
         }

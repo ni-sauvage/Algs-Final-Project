@@ -5,8 +5,8 @@ import java.util.*;
 
 class EdgeWeightedDigraph {
     private LinkedList<edge>[] adjList;
-    private LinkedList<stop> stopList = new LinkedList<>();
-    private HashMap<Integer, stop> stop_id_hash = new HashMap<Integer, stop>();
+    private final LinkedList<stop> stopList = new LinkedList<>();
+    private final HashMap<Integer, stop> stop_id_hash = new HashMap<Integer, stop>();
     double distTo[];
     stop prevTo[];
     private int V;
@@ -62,7 +62,7 @@ class EdgeWeightedDigraph {
                 String[] parameters = line.split(",");
                 for (String s : parameters) s.trim();
                 stop currentStop = new stop(
-                        Integer.valueOf(parameters[0]), parameters[1], parameters[2], parameters[3],
+                        Integer.parseInt(parameters[0]), parameters[1], parameters[2], parameters[3],
                         parameters[4], parameters[5], parameters[6], parameters[7],
                         parameters[8], parameters.length != 10 ? null : parameters[9], i);
                 stopList.add(currentStop);
@@ -83,9 +83,9 @@ class EdgeWeightedDigraph {
                 }
                 edge currentEdge;
                 if (parameters[2].equals("0")) {
-                    currentEdge = new edge(2, getStop(Integer.valueOf(parameters[0])), getStop(Integer.valueOf(parameters[1])));
+                    currentEdge = new edge(2, getStop(Integer.parseInt(parameters[0])), getStop(Integer.parseInt(parameters[1])));
                 } else {
-                    currentEdge = new edge(Double.valueOf(parameters[3]) / 100, getStop(Integer.valueOf(parameters[0])), getStop(Integer.valueOf(parameters[1])));
+                    currentEdge = new edge(Double.parseDouble(parameters[3]) / 100, getStop(Integer.parseInt(parameters[0])), getStop(Integer.parseInt(parameters[1])));
                 }
                 adjList[currentEdge.stopFrom.map_id].add(currentEdge);
             }
@@ -100,7 +100,7 @@ class EdgeWeightedDigraph {
                 String[] currParameters = currentLine.split(",");
                 for (String s : currParameters) s.trim();
                 if (prevParameters[0].equals(currParameters[0])) {
-                    edge currentEdge = new edge(1, getStop(Integer.valueOf(prevParameters[3])), getStop(Integer.valueOf(currParameters[3])));
+                    edge currentEdge = new edge(1, getStop(Integer.parseInt(prevParameters[3])), getStop(Integer.parseInt(currParameters[3])));
                     adjList[currentEdge.stopFrom.map_id].add(currentEdge);
                 }
                 previousLine = currentLine;
@@ -151,26 +151,21 @@ class EdgeWeightedDigraph {
             prev = prevTo[prev.map_id];
         }
         stopPath.add(fromStop);
-        ArrayList reversedStopPath = new ArrayList();
-        {
-            for (int k = stopPath.size() - 1; k >= 0; k--) {
-                reversedStopPath.add(stopPath.get(k));
-            }
-        }
-        return new path(reversedStopPath, distTo[toStop.map_id]);
+        Collections.reverse(stopPath);
+        return new path(stopPath, distTo[toStop.map_id]);
     }
 
     //Runs in 0(V) time
-    private stop getMinimum(ArrayList<stop> stopList){
+    private stop getMinimum(ArrayList<stop> listOfStops){
         double minimum = Double.POSITIVE_INFINITY;
         stop minStop = null;
-        for(int i = 0; i < stopList.size(); i++){
-            if(distTo[stopList.get(i).map_id] < minimum){
-                minimum = distTo[stopList.get(i).map_id];
-                minStop = stopList.get(i);
+        for(stop s : listOfStops){
+            if(distTo[s.map_id] < minimum){
+                minimum = distTo[s.map_id];
+                minStop = s;
             }
         }
-        stopList.remove(minStop);
+        listOfStops.remove(minStop);
         return minStop;
     }
 
