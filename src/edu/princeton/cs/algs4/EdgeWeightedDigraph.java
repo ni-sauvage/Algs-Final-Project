@@ -111,10 +111,10 @@ class EdgeWeightedDigraph {
     }
 
     public class path {
-        LinkedList<stop> pathStops;
+        ArrayList<stop> pathStops;
         double cost;
 
-        path(LinkedList<stop> pathStops, double cost) {
+        path(ArrayList<stop> pathStops, double cost) {
             this.pathStops = pathStops;
             this.cost = cost;
         }
@@ -125,7 +125,7 @@ class EdgeWeightedDigraph {
         stop toStop = getStop(toStopID);
         distTo = new double[V];
         prevTo = new stop[V];
-        LinkedList<stop> unsettledNodes = new LinkedList<>();
+        ArrayList<stop> unsettledNodes = new ArrayList<>();
         for (stop s : stopList) {
             distTo[s.map_id] = Double.POSITIVE_INFINITY;
             prevTo[s.map_id] = null;
@@ -133,21 +133,17 @@ class EdgeWeightedDigraph {
         }
         distTo[fromStop.map_id] = 0;
         while (!unsettledNodes.isEmpty()) {
-            Collections.sort(unsettledNodes, new stopCompare());
-            stop currentStop = unsettledNodes.poll();
-            if (distTo[currentStop.map_id] != Double.POSITIVE_INFINITY) {
-                for (edge e : adjList[currentStop.map_id]) {
-                    double alternativePath = distTo[e.stopFrom.map_id] + e.weight;
-                    if (alternativePath < distTo[e.stopTo.map_id]) {
-                        distTo[e.stopTo.map_id] = alternativePath;
-                        prevTo[e.stopTo.map_id] = e.stopFrom;
-                    }
+            stop currentStop = getMinimum(unsettledNodes);
+            if(currentStop == null) break; //If no stop had a distTo less than infinity, it will return null, so we should not execute the for loop
+            for (edge e : adjList[currentStop.map_id]) {
+                double alternativePath = distTo[e.stopFrom.map_id] + e.weight;
+                if (alternativePath < distTo[e.stopTo.map_id]) {
+                    distTo[e.stopTo.map_id] = alternativePath;
+                    prevTo[e.stopTo.map_id] = e.stopFrom;
                 }
-            } else {
-                break;
             }
         }
-        LinkedList<stop> stopPath = new LinkedList<stop>();
+        ArrayList<stop> stopPath = new ArrayList<>();
         stopPath.add(toStop);
         stop prev = prevTo[toStop.map_id];
         while (prev != fromStop) {
@@ -155,7 +151,7 @@ class EdgeWeightedDigraph {
             prev = prevTo[prev.map_id];
         }
         stopPath.add(fromStop);
-        LinkedList reversedStopPath = new LinkedList();
+        ArrayList reversedStopPath = new ArrayList();
         {
             for (int k = stopPath.size() - 1; k >= 0; k--) {
                 reversedStopPath.add(stopPath.get(k));
@@ -164,15 +160,18 @@ class EdgeWeightedDigraph {
         return new path(reversedStopPath, distTo[toStop.map_id]);
     }
 
-    private class stopCompare implements Comparator<stop> {
-        @Override
-        public int compare(stop o1, stop o2) {
-            if (distTo[o1.map_id] < distTo[o2.map_id])
-                return -1;
-            else if (distTo[o1.map_id] > distTo[o2.map_id])
-                return 1;
-            else return 0;
+    //Runs in 0(V) time
+    private stop getMinimum(ArrayList<stop> stopList){
+        double minimum = Double.POSITIVE_INFINITY;
+        stop minStop = null;
+        for(int i = 0; i < stopList.size(); i++){
+            if(distTo[stopList.get(i).map_id] < minimum){
+                minimum = distTo[stopList.get(i).map_id];
+                minStop = stopList.get(i);
+            }
         }
+        stopList.remove(minStop);
+        return minStop;
     }
 
     stop getStop(int stop_id) {
