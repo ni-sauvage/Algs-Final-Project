@@ -75,8 +75,42 @@ class searchTimes {
     }
 
     void printSearchTimes(ArrayList<stop> stopsWithTime) {
+        System.out.println("Trip-ID  Arrival-Time  Departure-Time  Stop-ID  Stop-Sequence  Stop-Headsign  Pickup-Type  Drop-off-Type  Shape-Dist-Traveled");
         for (int i = 0; i < stopsWithTime.size(); i++) {
-            System.out.println(stopsWithTime.get(i).details);
+            StringBuilder sb = new StringBuilder();
+            String[] printValues = stopsWithTime.get(i).details.split(",");
+            String[] appendValues = new String[9];
+            for(int j = 0; j < 9; j++){
+                try{
+                    appendValues[j] = printValues[j].trim();
+                }
+                catch (Exception e){
+                    appendValues[j] = "";
+                }
+            }
+            alignPrintString(sb, 9, appendValues[0]);
+            alignPrintString(sb, 14, appendValues[1]);
+            alignPrintString(sb, 16, appendValues[2]);
+            alignPrintString(sb, 9, appendValues[3]);
+            alignPrintString(sb, 15, appendValues[4]);
+            alignPrintString(sb, 15, appendValues[5]);
+            alignPrintString(sb, 13, appendValues[6]);
+            alignPrintString(sb, 15, appendValues[7]);
+            alignPrintString(sb, 19, appendValues[8]);
+            System.out.println(sb);
+        }
+    }
+    void alignPrintString(StringBuilder sb, int properLength, String appendString){
+        int currentLength;
+        if(appendString == null){
+            currentLength = 0;
+        }
+        else {
+            sb.append(appendString);
+            currentLength = appendString.length();
+        }
+        for(int i = 0; i < properLength - currentLength; i++){
+            sb.append(" ");
         }
     }
 
