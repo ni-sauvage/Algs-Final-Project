@@ -38,7 +38,7 @@ public class FinalProject {
             System.out.println(
                     "\nIn order to find the shortest path between two bus stops, enter \"1\"\n" +
                             "In order to search for a bus stop by either it's full name or the first few characters, enter \"2\"\n" +
-                            "In order to search for a bus stop by given arrival time, enter \"3\"\n" +
+                            "In order to search for a trip by given arrival time, enter \"3\"\n" +
                             "In order to end the programme, please enter \"4\""
             );
             int selection = 0;
@@ -71,6 +71,7 @@ public class FinalProject {
                                     fromID = input.nextInt();
                                     fromIDEntered = true;
                                 } else {
+                                    input.next();
                                     System.out.print("ERROR: Please enter the ID of the stop you would like to go from: ");
                                 }
                             }
@@ -81,6 +82,7 @@ public class FinalProject {
                                     toID = input.nextInt();
                                     toIDEntered = true;
                                 } else {
+                                    input.next();
                                     System.out.print("ERROR: Please enter the ID of the stop you would like to go to: ");
                                 }
                             }
