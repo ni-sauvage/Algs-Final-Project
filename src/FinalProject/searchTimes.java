@@ -76,9 +76,9 @@ class searchTimes {
 
     void printSearchTimes(ArrayList<stop> stopsWithTime) {
         System.out.println("Trip-ID  Arrival-Time  Departure-Time  Stop-ID  Stop-Sequence  Stop-Headsign  Pickup-Type  Drop-off-Type  Shape-Dist-Traveled");
-        for (int i = 0; i < stopsWithTime.size(); i++) {
+        for (stop s : stopsWithTime) {
             StringBuilder sb = new StringBuilder();
-            String[] printValues = stopsWithTime.get(i).details.split(",");
+            String[] printValues = s.details.split(",");
             String[] appendValues = new String[9];
             for(int j = 0; j < 9; j++){
                 try{
